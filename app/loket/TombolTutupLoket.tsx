@@ -2,12 +2,16 @@
 
 import { useFormStatus } from "react-dom";
 import { tutupLoket } from "@/app/actions/antrian";
+import { Ikon } from "@/app/components/Ikon";
 
 function Tombol() {
   const { pending } = useFormStatus();
   return (
     <button className="tombol tombol--putih tombol--penuh" disabled={pending}>
-      {pending ? "Menutup…" : "Tutup loket & ganti meja"}
+      <span className="ikon-teks">
+        <Ikon nama="keluar" ukuran={18} />
+        {pending ? "Menutup…" : "Tutup loket & ganti meja"}
+      </span>
     </button>
   );
 }

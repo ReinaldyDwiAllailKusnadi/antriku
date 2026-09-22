@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { wajibPeran } from "@/lib/sesi";
 import { tanggalHariIni } from "@/lib/antrian";
 import { Chrome } from "../components/Chrome";
+import { Ikon } from "../components/Ikon";
 
 // Ringkasan operasional hari ini.
 //
@@ -193,8 +194,15 @@ export default async function HalamanAdmin() {
         </div>
 
         <p className="kecil samar">
-          <Link href="/display">Buka layar display</Link> ·{" "}
-          <Link href="/loket">Panel loket</Link>
+          <Link href="/display" className="ikon-teks">
+            <Ikon nama="layar" ukuran={15} />
+            Buka layar display
+          </Link>
+          {" · "}
+          <Link href="/loket" className="ikon-teks">
+            <Ikon nama="meja" ukuran={15} />
+            Panel loket
+          </Link>
         </p>
       </main>
     </>

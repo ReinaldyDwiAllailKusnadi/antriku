@@ -9,12 +9,16 @@
 
 import { useFormStatus } from "react-dom";
 import { keluar } from "@/app/actions/auth";
+import { Ikon } from "./Ikon";
 
 function Tombol() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending}>
-      {pending ? "Keluar…" : "Keluar"}
+      <span className="ikon-teks">
+        <Ikon nama="keluar" ukuran={17} />
+        {pending ? "Keluar…" : "Keluar"}
+      </span>
     </button>
   );
 }

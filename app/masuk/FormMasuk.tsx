@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { masuk, type HasilAksi } from "@/app/actions/auth";
+import { Ikon } from "@/app/components/Ikon";
 
 const AWAL: HasilAksi = {};
 
@@ -17,7 +18,12 @@ export function FormMasuk() {
       )}
 
       <div className="isian">
-        <label htmlFor="email">Email</label>
+        <label htmlFor="email">
+          <span className="ikon-teks">
+            <Ikon nama="orang" ukuran={16} />
+            Email
+          </span>
+        </label>
         <input
           id="email"
           name="email"
@@ -29,7 +35,12 @@ export function FormMasuk() {
       </div>
 
       <div className="isian">
-        <label htmlFor="kataSandi">Kata sandi</label>
+        <label htmlFor="kataSandi">
+          <span className="ikon-teks">
+            <Ikon nama="perisai" ukuran={16} />
+            Kata sandi
+          </span>
+        </label>
         <input
           id="kataSandi"
           name="kataSandi"
@@ -40,7 +51,10 @@ export function FormMasuk() {
       </div>
 
       <button type="submit" className="tombol tombol--penuh" disabled={sedang}>
-        {sedang ? "Memeriksa…" : "Masuk"}
+        <span className="ikon-teks">
+          <Ikon nama="masuk" ukuran={18} />
+          {sedang ? "Memeriksa…" : "Masuk"}
+        </span>
       </button>
     </form>
   );

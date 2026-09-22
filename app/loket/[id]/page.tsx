@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { wajibMasuk } from "@/lib/sesi";
 import { tanggalHariIni, pilihBerikutnya } from "@/lib/antrian";
 import { Chrome } from "../../components/Chrome";
+import { Ikon } from "../../components/Ikon";
 import { PanelLoket } from "../PanelLoket";
 import { TombolTutupLoket } from "../TombolTutupLoket";
 
@@ -81,7 +82,10 @@ export default async function HalamanLoket({
       <Chrome />
       <main className="bungkus">
         <p className="kecil samar mb-1">
-          <Link href="/loket">← Ganti loket</Link>
+          <Link href="/loket" className="ikon-teks">
+            <Ikon nama="panah" ukuran={15} />
+            Ganti loket
+          </Link>
         </p>
 
         <PanelLoket

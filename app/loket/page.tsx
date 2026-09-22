@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { wajibPeran } from "@/lib/sesi";
 import { tanggalHariIni } from "@/lib/antrian";
 import { Chrome } from "../components/Chrome";
+import { Ikon } from "../components/Ikon";
 import { TombolBukaLoket } from "./TombolBukaLoket";
 
 // Halaman pemilihan loket.
@@ -112,7 +113,10 @@ export default async function HalamanPilihLoket() {
         )}
 
         <p className="kecil samar mt-2">
-          Layar display ruang tunggu: <Link href="/display">/display</Link>
+          <Link href="/display" className="ikon-teks">
+            <Ikon nama="layar" ukuran={15} />
+            Layar display ruang tunggu
+          </Link>
         </p>
       </main>
     </>

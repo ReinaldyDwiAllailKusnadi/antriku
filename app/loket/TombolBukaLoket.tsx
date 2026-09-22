@@ -10,6 +10,7 @@
 
 import { useActionState } from "react";
 import { bukaLoket, type HasilAksi } from "@/app/actions/antrian";
+import { Ikon } from "@/app/components/Ikon";
 
 const AWAL: HasilAksi = {};
 
@@ -52,7 +53,10 @@ export function TombolBukaLoket({
       <form action={kirim}>
         <input type="hidden" name="loketId" value={loketId} />
         <button className="tombol tombol--penuh" disabled={sedang}>
-          {sedang ? "Membuka…" : "Buka loket ini"}
+          <span className="ikon-teks">
+            <Ikon nama="masuk" ukuran={18} />
+            {sedang ? "Membuka…" : "Buka loket ini"}
+          </span>
         </button>
       </form>
     </div>

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { ambil, type HasilAksi } from "@/app/actions/antrian";
+import { Ikon } from "./components/Ikon";
 
 const AWAL: HasilAksi = {};
 
@@ -22,7 +23,9 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
   if (hasil.kode) {
     return (
       <div className="kartu kartu--tegas tengah">
-        <p className="samar kecil mb-0">Nomor antrianmu</p>
+        <div className="kartu__judul">
+          <h2 className="mb-0">Nomor antrianmu</h2>
+        </div>
         <p className="nomor-besar mono">{hasil.kode}</p>
         <p className="mb-2">{hasil.pesan}</p>
         <p className="kecil samar mb-0">
@@ -31,10 +34,16 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
         </p>
         <div className="baris-tombol mt-2" style={{ justifyContent: "center" }}>
           <a className="tombol tombol--putih" href="/display">
-            Lihat layar antrian
+            <span className="ikon-teks">
+              <Ikon nama="layar" ukuran={18} />
+              Lihat layar antrian
+            </span>
           </a>
           <a className="tombol tombol--putih" href="/">
-            Ambil nomor lagi
+            <span className="ikon-teks">
+              <Ikon nama="tiket" ukuran={18} />
+              Ambil nomor lagi
+            </span>
           </a>
         </div>
       </div>
@@ -42,7 +51,15 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
   }
 
   return (
-    <form action={kirim} noValidate>
+    <div className="kartu kartu--tegas">
+      <div className="kartu__judul">
+        <h2>Ambil nomor antrian</h2>
+        <p className="kecil samar mb-0">
+          Pilih layanan yang kamu butuhkan. Nomor langsung terbit dan muncul di
+          layar ruang tunggu.
+        </p>
+      </div>
+      <form action={kirim} noValidate>
       {hasil.galat && (
         <p className="pesan pesan--galat" role="alert">
           {hasil.galat}
@@ -50,7 +67,12 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
       )}
 
       <div className="isian">
-        <label>Pilih layanan</label>
+        <label>
+          <span className="ikon-teks">
+            <Ikon nama="daftar" ukuran={16} />
+            Pilih layanan
+          </span>
+        </label>
         <div className="pilihan-layanan">
           {layanan.map((l) => (
             <label key={l.id} className="pilihan">
@@ -82,7 +104,12 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
       </div>
 
       <div className="isian">
-        <label>Jenis antrian</label>
+        <label>
+          <span className="ikon-teks">
+            <Ikon nama="orang" ukuran={16} />
+            Jenis antrian
+          </span>
+        </label>
         <div className="pilihan-layanan">
           <label className="pilihan">
             <input
@@ -120,7 +147,12 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
 
       {jenis === "prioritas" && (
         <div className="isian">
-          <label htmlFor="catatan">Alasan prioritas</label>
+          <label htmlFor="catatan">
+            <span className="ikon-teks">
+              <Ikon nama="info" ukuran={16} />
+              Alasan prioritas
+            </span>
+          </label>
           <input
             id="catatan"
             name="catatan"
@@ -137,7 +169,12 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
       )}
 
       <div className="isian">
-        <label htmlFor="nama">Nama (boleh dikosongkan)</label>
+        <label htmlFor="nama">
+          <span className="ikon-teks">
+            <Ikon nama="orang" ukuran={16} />
+            Nama (boleh dikosongkan)
+          </span>
+        </label>
         <input id="nama" name="nama" type="text" maxLength={60} />
         <p className="isian__petunjuk">
           Dipakai petugas untuk memanggil kalau nomor terlewat.
@@ -149,8 +186,12 @@ export function FormAmbil({ layanan }: { layanan: Layanan[] }) {
         className="tombol tombol--penuh tombol--besar"
         disabled={sedang || layanan.length === 0}
       >
-        {sedang ? "Mengambil nomor…" : "Ambil nomor antrian"}
+        <span className="ikon-teks">
+          <Ikon nama="tiket" ukuran={19} />
+          {sedang ? "Mengambil nomor…" : "Ambil nomor antrian"}
+        </span>
       </button>
-    </form>
+      </form>
+    </div>
   );
 }

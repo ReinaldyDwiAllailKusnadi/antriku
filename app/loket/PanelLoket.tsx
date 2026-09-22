@@ -14,6 +14,7 @@ import {
   type HasilAksi,
 } from "@/app/actions/antrian";
 import { Lencana, LencanaPrioritas } from "@/app/components/Lencana";
+import { Ikon } from "@/app/components/Ikon";
 
 const AWAL: HasilAksi = {};
 
@@ -124,7 +125,10 @@ export function PanelLoket({
                     <input type="hidden" name="loketId" value={loketId} />
                     <input type="hidden" name="aksi" value="mulai" />
                     <button className="tombol" disabled={sedangStatus}>
-                      Mulai layani
+                      <span className="ikon-teks">
+                        <Ikon nama="centang" ukuran={17} />
+                        Mulai layani
+                      </span>
                     </button>
                   </form>
                   <form action={kirimStatus}>
@@ -132,7 +136,10 @@ export function PanelLoket({
                     <input type="hidden" name="loketId" value={loketId} />
                     <input type="hidden" name="aksi" value="panggil_ulang" />
                     <button className="tombol tombol--putih" disabled={sedangStatus}>
-                      Panggil ulang
+                      <span className="ikon-teks">
+                        <Ikon nama="lonceng" ukuran={17} />
+                        Panggil ulang
+                      </span>
                     </button>
                   </form>
                   <form action={kirimStatus}>
@@ -140,7 +147,10 @@ export function PanelLoket({
                     <input type="hidden" name="loketId" value={loketId} />
                     <input type="hidden" name="aksi" value="lewati" />
                     <button className="tombol tombol--putih" disabled={sedangStatus}>
-                      Tidak hadir
+                      <span className="ikon-teks">
+                        <Ikon nama="keluar" ukuran={17} />
+                        Tidak hadir
+                      </span>
                     </button>
                   </form>
                 </>
@@ -151,7 +161,10 @@ export function PanelLoket({
                   <input type="hidden" name="loketId" value={loketId} />
                   <input type="hidden" name="aksi" value="selesai" />
                   <button className="tombol tombol--hijau" disabled={sedangStatus}>
-                    Selesai
+                    <span className="ikon-teks">
+                      <Ikon nama="centang" ukuran={17} />
+                      Selesai
+                    </span>
                   </button>
                 </form>
               )}
@@ -177,7 +190,10 @@ export function PanelLoket({
           className="tombol tombol--penuh tombol--besar"
           disabled={sedangPanggil || Boolean(aktif)}
         >
-          {sedangPanggil ? "Memanggil…" : "Panggil nomor berikutnya"}
+          <span className="ikon-teks">
+            <Ikon nama="lonceng" ukuran={19} />
+            {sedangPanggil ? "Memanggil…" : "Panggil nomor berikutnya"}
+          </span>
         </button>
       </form>
 

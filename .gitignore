@@ -6,3 +6,11 @@ node_modules/
 tsconfig.tsbuildinfo
 next-env.d.ts
 generated/
+
+# Foto master (JPG resolusi penuh) TIDAK masuk git.
+# Alasannya sama seperti di Batikku: berkasnya besar dan bisa diunduh ulang
+# dari sumbernya (tercatat di lib/foto.ts). Yang masuk git hanya hasil
+# olahannya di public/img/ (WebP, jauh lebih kecil), supaya repo tetap
+# ringan tapi situsnya tetap bisa di-deploy tanpa langkah manual.
+# Hasilnya: `git clone` lalu `npm run build` langsung jalan.
+assets/img/
