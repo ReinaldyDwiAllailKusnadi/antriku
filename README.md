@@ -84,6 +84,59 @@ prioritas, keadaan nol, dan bentuk data untuk layar display.
 `--env-file=.env` wajib — `tsx` tidak memuat `.env` sendiri, hanya Prisma CLI
 yang memuatnya.
 
+## Tampilan: foto nyata, bukan ilustrasi
+
+Versi pertama halaman publiknya diukur dan hasilnya: 85 elemen, 788 karakter,
+**nol gambar dan nol ikon** — seluruh halaman hanya teks. Itu penyebabnya
+terasa murah, bukan pilihan warnanya.
+
+Sekarang halaman itu memakai foto sungguhan dan ikon SVG satu gaya.
+
+**Foto** diambil dari Wikimedia Commons, hanya yang lisensinya jelas
+(CC0 / CC BY / CC BY-SA). Pemilihannya dilakukan dengan angka, bukan selera —
+karena foto tidak bisa dilihat langsung di lingkungan pengembangan ini:
+
+| Diukur | Ditolak | Dipakai |
+|---|---|---|
+| Kecerahan 0–255 | Warteschlange Baumarkt (46 — gelap) | Admin Reception (153) |
+| Saturasi | Waiting room chair glass brick (0.0 — hitam-putih) | Reception panoramio (paling berwarna) |
+| Dimensi | Long line exchange money (1024×681 — kecil) | sisanya ≥1920 px |
+
+Satu aturan lagi: **judul berkas aslinya harus menyebutkan subjek fotonya**.
+Berkas bernama `IMG_2043.jpg` tidak dipakai — tanpa bisa melihatnya, tidak ada
+cara memastikan isinya, dan memakainya berarti menebak.
+
+Semua kredit dan lisensi ada di `lib/foto.ts` sebagai data, dan halaman kredit
+di situs dibangun dari data itu — jadi mustahil ada foto terpakai tanpa
+kreditnya. Tidak ada satu pun gambar buatan AI di proyek ini.
+
+**Ikon** digambar sebagai SVG (`app/components/Ikon.tsx`), bukan emoji. Emoji
+dirender berbeda oleh tiap sistem operasi dan tidak bisa diberi warna merek.
+
+**Kontras di atas foto** dihitung, bukan dikira-kira. Dua cacat ditemukan dan
+diperbaiki:
+
+- Foto hero punya piksel putih penuh (255) tepat di zona tempat teks duduk.
+  Pada alpha 0.38, putih di atasnya hanya mencapai **2.5:1** — di bawah ambang
+  WCAG AA. Selubung gradien dinaikkan ke 0.93/0.78/0.62 → **6.6:1**.
+- Foto latar halaman masuk pada opacity 0.32 membuat teks keterangan mencapai
+  **4.25:1**. Diturunkan ke 0.22 → **6.17:1**.
+
+### Foto dan git
+
+Foto master (JPG resolusi penuh, 5.1 MB) **tidak** masuk git — `assets/img/`
+ada di `.gitignore`. Yang masuk git hanya hasil olahannya di `public/img/`
+(WebP, 2.0 MB), supaya `git clone` + `npm run build` langsung jalan tanpa
+langkah manual.
+
+```bash
+node scripts/siapkan-gambar.mjs   # assets/img/*.jpg → public/img/*.webp
+```
+
+Ukuran WebP ditentukan dari pengukuran: `quality 74` memangkas ~12% berat
+dengan mutu yang masih baik, dan hero dibatasi 1400 px (dari 2.53 MB menjadi
+2.0 MB untuk seluruh `public/img`).
+
 ## Tumpukan
 
 Next.js 15 (App Router, Server Actions) · Prisma 7.10.0 · PostgreSQL 16 ·
