@@ -1,0 +1,223 @@
+// Antriku — sistem antrian layanan publik dengan display panggilan real-time.
+//
+// ============================================================
+// DUA KEPUTUSAN BESAR DI FILE INI (baca ini dulu sebelum mengubah apa pun)
+// ============================================================
+//
+// 1. NOMOR ANTRIAN DISIMPAN DI DUA BARIS TERPISAH: biasa dan prioritas.
+//
+//    Kenapa tidak satu deret nomor saja?
+//
+//    Kalau prioritas menumpang deret yang sama, prioritas jadi tidak berarti:
+//    lansia mengantre di belakang 40 orang yang datang lebih dulu.
+//
+//    Tapi kalau prioritas selalu didahulukan tanpa batas, orang biasa tidak
+//    pernah maju — dan itu sama tidak adilnya.
+//
+//    Jalan tengahnya: DUA deret terpisah, lalu aturan pemanggilan 2:1
+//    (dua nomor biasa, satu nomor prioritas). Dua deret itu perlu dua
+//    penghitung, dan itu sebabnya tabel PenghitungAntrian punya kolom
+//    `jenis` di dalam unique constraint-nya.
+//
+//    Konsekuensi yang harus disadari: nomor `A-001` dan `AP-001` bisa
+//    muncul di hari yang sama. Itu BUKAN bug — itu memang dua deret.
+//
+// 2. PENGHITUNG NOMOR ADALAH SATU BARIS PER (layanan, tanggal, jenis).
+//
+//    Nomor antrian tidak boleh kembar. Cara yang salah adalah:
+//    "baca nomor terakhir, tambah satu, simpan" — dua loket yang menekan
+//    tombol pada milidetik yang sama akan membaca nomor yang sama.
+//
+//    Cara yang benar: kunci baris penghitung itu (SELECT ... FOR UPDATE)
+//    di dalam transaksi, baru tambah. Karena barisnya SATU per deret,
+//    permintaan kedua otomatis menunggu yang pertama selesai.
+//
+//    Unique constraint di bawah adalah jaring pengaman terakhir kalau
+//    logika penguncian itu suatu hari rusak.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7 tidak membaca url dari sini — koneksi diatur di prisma.config.ts.
+  // Dibiarkan kosong supaya tidak ada dua sumber kebenaran yang bisa
+  // saling bertentangan.
+}
+
+/// Jenis layanan yang dilayani kantor. Contoh: A = Umum, B = KTP/KK,
+/// C = Surat Keterangan. Kode ini yang muncul di depan nomor antrian.
+model Layanan {
+  id        String   @id @default(cuid())
+  kode      String   @unique // "A", "B", "C" — huruf tunggal, dipakai di nomor
+  nama      String
+  deskripsi String?
+  /// Huruf yang dipakai untuk menandai nomor prioritas di layanan ini.
+  /// Default "P", disimpan per layanan supaya bisa diubah tanpa ubah kode.
+  kodePrioritas String @default("P")
+  aktif     Boolean  @default(true)
+  urutan    Int      @default(0)
+  dibuatPada DateTime @default(now())
+
+  antrian  Antrian[]
+  penghitung PenghitungAntrian[]
+  loket    Loket[]
+
+  @@index([aktif, urutan])
+}
+
+/// Baris penghitung nomor. SATU baris per (layanan, tanggal, jenis).
+///
+/// Ini baris yang dikunci (FOR UPDATE) saat mengambil nomor berikutnya.
+/// Karena hanya ada satu baris per deret per hari, tidak mungkin dua
+/// permintaan bersamaan mendapat nomor yang sama.
+model PenghitungAntrian {
+  id        String   @id @default(cuid())
+  layananId String
+  /// Tanggal dalam bentuk "YYYY-MM-DD" (string, bukan DateTime).
+  ///
+  /// Kenapa string? Karena yang kita butuhkan adalah "hari ini menurut
+  /// kantor", bukan titik waktu. Kalau pakai DateTime, dua permintaan di
+  /// hari yang sama tapi beda milidetik bisa dianggap beda hari, dan
+  /// nomor antrian kembali ke 1 di tengah hari. String menghilangkan
+  /// seluruh kelas bug itu.
+  tanggal   String
+  jenis     String   // "biasa" | "prioritas"
+  terakhir  Int      @default(0)
+
+  layanan Layanan @relation(fields: [layananId], references: [id], onDelete: Cascade)
+
+  @@unique([layananId, tanggal, jenis])
+  @@index([tanggal])
+}
+
+/// Satu baris = satu orang yang mengambil nomor antrian.
+model Antrian {
+  id         String   @id @default(cuid())
+  layananId  String
+  jenis      String   // "biasa" | "prioritas"
+  nomorUrut  Int      // 1, 2, 3, ... per deret per hari
+  /// Tanggal "YYYY-MM-DD" — sama bentuknya dengan PenghitungAntrian.tanggal.
+  ///
+  /// Kenapa kolom ini ada padahal sudah ada dibuatPada? Karena constraint
+  /// di bawah butuh pembanding yang STABIL. Kalau yang dipakai dibuatPada
+  /// (timestamp), dua nomor kembar di hari yang sama tetap lolos — jamnya
+  /// beda beberapa mikrodetik. Constraint itu jadi hiasan, bukan penjaga.
+  tanggal    String
+  /// Nomor lengkap yang dilihat orang: "A-001" atau "AP-001".
+  /// Disimpan (bukan dihitung ulang saat render) supaya nomor yang sudah
+  /// dicetak/diucapkan tidak pernah berubah kalau kode diubah nanti.
+  kode       String
+  status     String   @default("menunggu")
+  // menunggu | dipanggil | dilayani | selesai | dilewati | batal
+  nama       String?  // opsional — boleh kosong, tidak semua mau menulis nama
+  catatan    String?  // mis. "lansia", "ibu hamil" — alasan prioritas
+  dibuatPada   DateTime  @default(now())
+  dipanggilPada DateTime?
+  dilayaniPada  DateTime?
+  selesaiPada   DateTime?
+
+  loketId    String?
+  petugasId  String?
+
+  layanan Layanan  @relation(fields: [layananId], references: [id], onDelete: Cascade)
+  loket   Loket?   @relation(fields: [loketId], references: [id], onDelete: SetNull)
+  petugas Petugas? @relation(fields: [petugasId], references: [id], onDelete: SetNull)
+  pemanggilan Pemanggilan[]
+
+  // Nomor kembar dalam satu deret per hari harus DITOLAK database,
+  // bukan cuma dihindari kode. Kalau penguncian di lib/antrian.ts gagal
+  // karena sebab apa pun, constraint ini yang menahan.
+  @@unique([layananId, jenis, kode, tanggal])
+  @@index([layananId, status, jenis, nomorUrut])
+  @@index([layananId, tanggal, status])
+  @@index([dibuatPada])
+}
+
+/// Meja pelayanan. Satu loket melayani satu jenis layanan pada satu waktu —
+/// pembatasan ini disengaja: kalau satu loket melayani semua layanan,
+/// tampilan display tidak bisa lagi menunjukkan "loket mana untuk apa".
+model Loket {
+  id        String   @id @default(cuid())
+  nama      String   @unique // "Loket 1"
+  layananId String
+  aktif     Boolean  @default(true)
+  dibuatPada DateTime @default(now())
+
+  layanan  Layanan   @relation(fields: [layananId], references: [id], onDelete: Cascade)
+  antrian  Antrian[]
+  pemanggilan Pemanggilan[]
+  petugas  Petugas[]
+
+  @@index([aktif])
+}
+
+/// Riwayat setiap pemanggilan. Append-only: tidak ada baris yang diubah
+/// atau dihapus. Kalau ada sengketa "saya tidak pernah dipanggil", tabel
+/// inilah buktinya — lengkap dengan loket dan jamnya.
+model Pemanggilan {
+  id        String   @id @default(cuid())
+  antrianId String
+  loketId   String?
+  petugasId String?
+  /// "panggil" | "panggil_ulang" | "lewati"
+  aksi      String
+  pada      DateTime @default(now())
+
+  antrian Antrian @relation(fields: [antrianId], references: [id], onDelete: Cascade)
+  loket   Loket?  @relation(fields: [loketId], references: [id], onDelete: SetNull)
+  petugas Petugas? @relation(fields: [petugasId], references: [id], onDelete: SetNull)
+
+  @@index([antrianId, pada])
+  @@index([pada])
+}
+
+/// Petugas yang mengoperasikan loket.
+model Petugas {
+  id         String   @id @default(cuid())
+  nama       String
+  email      String   @unique
+  sandiHash  String
+  /// "petugas" | "admin"
+  peran      String   @default("petugas")
+  aktif      Boolean  @default(true)
+  dibuatPada DateTime @default(now())
+
+  /// Loket yang SEDANG dibuka petugas ini, kalau ada.
+  ///
+  /// Kenapa di database dan bukan di cookie? Karena cookie ada di sisi
+  /// pengguna — siapa pun bisa mengubahnya. Kalau loket yang dijaga
+  /// disimpan di cookie, petugas A bisa menuliskan id loket B dan
+  /// menyelesaikan antrian orang lain. Kewenangan harus selalu berasal
+  /// dari database, bukan dari apa yang dikirim pengguna.
+  loketId    String?
+
+  loket       Loket?        @relation(fields: [loketId], references: [id], onDelete: SetNull)
+  antrian     Antrian[]
+  pemanggilan Pemanggilan[]
+
+  @@index([email])
+  @@index([loketId])
+}
+
+/// Satu baris penanda perubahan global. Inilah jantung tampilan real-time.
+///
+/// Setiap perubahan data antrian menaikkan `versi` di dalam transaksi yang
+/// sama. Display tidak perlu tahu APA yang berubah — ia hanya membaca satu
+/// angka kecil ini sekali per detik, dan mengambil data lengkap hanya saat
+/// angkanya berubah.
+///
+/// Kenapa tidak langsung membaca tabel Antrian tiap detik? Karena itu
+/// berarti menghitung ulang seluruh daftar tiap detik untuk setiap layar
+/// yang menonton. Dengan penanda ini, layar yang tidak ada perubahan
+/// hampir tidak membebani database sama sekali.
+///
+/// Kenapa versi dinaikkan DI DALAM transaksi, bukan setelahnya? Supaya
+/// tidak ada celah waktu di mana data sudah berubah tapi penanda belum —
+/// layar akan menampilkan keadaan lama tanpa pernah tahu.
+model Penanda {
+  id        String   @id // selalu "global"
+  versi     Int      @default(0)
+  diubahPada DateTime @default(now())
+}
